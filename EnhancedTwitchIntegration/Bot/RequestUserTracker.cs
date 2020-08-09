@@ -10,5 +10,6 @@ namespace SongRequestManager
     {
         public int numRequests = 0;
         public DateTime resetTime = DateTime.Now;
+        public DateTime lastPlayedTime = DateTime.MinValue;
     }
 }

@@ -83,6 +83,27 @@ namespace SongRequestManager
 
         internal static void SRMButtonPressed()
         {
+            List<SongRequest> songs = RequestQueue.Songs;
+            if (songs.Count > 0)
+            {
+                IOrderedEnumerable<SongRequest> songPriorities = songs.OrderBy(x =>
+                {
+                    var id = x.requestor.id;
+                    return RequestTracker.ContainsKey(id) ? RequestTracker[id].lastPlayedTime : DateTime.MinValue;
+                });
+                SongRequest bestSong = songPriorities.First();
+                songs.Remove(bestSong);
+                songs.Insert(0, bestSong);
+                //// Write the modified request queue to file
+                //RequestQueue.Write();
+
+                // Refresh the queue ui
+                _refreshQueue = true;
+
+                //// And write a summary to file
+                //WriteQueueSummaryToFile();
+            }
+
             var soloFlow = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             soloFlow.InvokeMethod<object, SoloFreePlayFlowCoordinator>("PresentFlowCoordinator", _flowCoordinator, null, false, false);
         }
@@ -729,6 +750,10 @@ namespace SongRequestManager
                 {
                     SetRequestStatus(index, RequestStatus.Played);
                     request = DequeueRequest(index);
+                    var requestorId = request.requestor.id;
+                    if (!RequestTracker.ContainsKey(requestorId))
+                        RequestTracker.Add(requestorId, new RequestUserTracker());
+                    RequestTracker[requestorId].lastPlayedTime = DateTime.Now;
                 }
                 else
                 {

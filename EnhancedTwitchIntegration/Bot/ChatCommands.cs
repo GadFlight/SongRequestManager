@@ -958,7 +958,6 @@ namespace SongRequestManager
             foreach (SongRequest req in RequestQueue.Songs.ToArray())
             {
                 var song = req.song;
-		// GadFlight!!
                 if (msg.Add(new DynamicText().AddUser(ref req.requestor).AddSong(ref song).Parse(QueueListFormat), ", ")) break;
             }
             msg.end($" ... and {RequestQueue.Songs.Count - msg.Count} more songs.", "Queue is empty.");
