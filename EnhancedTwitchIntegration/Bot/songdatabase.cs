@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 using System.Collections.Concurrent;
@@ -81,11 +82,30 @@ namespace SongRequestManager
                     song.Add("version", song["key"]);
 
                     var metadata = song["metadata"];
-                    song.Add("songName", metadata["songName"].Value);
-                    song.Add("songSubName", metadata["songSubName"].Value);
-                    song.Add("authorName", metadata["songAuthorName"].Value);
-                    song.Add("levelAuthor", metadata["levelAuthorName"].Value);
+                    var songName = metadata["songName"].Value;
+                    var songSubName = metadata["songSubName"].Value;
+                    var authorName = metadata["songAuthorName"].Value;
+                    var levelAuthorName = metadata["levelAuthorName"].Value;
+                    song.Add("songName", songName);
+                    song.Add("songSubName", songSubName);
+                    song.Add("authorName", authorName);
+                    song.Add("levelAuthor", levelAuthorName);
                     song.Add("rating", song["stats"]["rating"].AsFloat*100);
+                    bool authorIsMapper = authorName.Replace(" ", "").ToLower().Equals(levelAuthorName.Replace(" ", "").ToLower())
+                        || authorName.ToLower().Contains(levelAuthorName.ToLower());
+                    if (authorIsMapper)
+                    {
+                        levelAuthorName = authorName;
+                        authorName = songSubName;
+                        songSubName = "";
+                    }
+                    if (songSubName.Length > 0)
+                    {
+                        songName = $"{songName} ({Regex.Replace(songSubName, @"\((.*)\)", @"$1")})";
+                    }
+                    song.Add("trueSongName", songName);
+                    song.Add("trueSongAuthor", authorName);
+                    song.Add("trueLevelAuthor", levelAuthorName);
 
                     bool degrees90 = false;
                     bool degrees360 = false;

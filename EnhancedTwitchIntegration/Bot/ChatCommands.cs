@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using StreamCore.Twitch;
 using System.Threading.Tasks;
@@ -957,7 +958,8 @@ namespace SongRequestManager
             foreach (SongRequest req in RequestQueue.Songs.ToArray())
             {
                 var song = req.song;
-                if (msg.Add(new DynamicText().AddSong(ref song).Parse(QueueListFormat), ", ")) break;
+		// GadFlight!!
+                if (msg.Add(new DynamicText().AddUser(ref req.requestor).AddSong(ref song).Parse(QueueListFormat), ", ")) break;
             }
             msg.end($" ... and {RequestQueue.Songs.Count - msg.Count} more songs.", "Queue is empty.");
             return;
@@ -1426,7 +1428,29 @@ namespace SongRequestManager
                 //{
                 //    Add("pp", "");
                 //}
-
+                if (!dynamicvariables.ContainsKey("trueSongName"))
+                {
+                    var metadata = song["metadata"];
+                    var songName = metadata["songName"].Value;
+                    var songSubName = metadata["songSubName"].Value;
+                    var authorName = metadata["songAuthorName"].Value;
+                    var levelAuthorName = metadata["levelAuthorName"].Value;
+                    bool authorIsMapper = authorName.Replace(" ", "").ToLower().Equals(levelAuthorName.Replace(" ", "").ToLower())
+                        || authorName.ToLower().Contains(levelAuthorName.ToLower());
+                    if (authorIsMapper)
+                    {
+                        levelAuthorName = authorName;
+                        authorName = songSubName;
+                        songSubName = "";
+                    }
+                    if (songSubName.Length > 0)
+                    {
+                        songName = $"{songName} ({Regex.Replace(songSubName, @"\((.*)\)", @"$1")})";
+                    }
+                    Add("trueSongName", songName);
+                    Add("trueSongAuthor", authorName);
+                    Add("trueLevelAuthor", levelAuthorName);
+                }
 
                 if (song["pp"].AsFloat > 0) Add("PP", song["pp"].AsInt.ToString() + " PP"); else Add("PP", "");
 
@@ -1436,7 +1460,7 @@ namespace SongRequestManager
                 Add("BeatsaberLink", $"https://bsaber.com/songs/{song["id"].Value}");
                 return this;
             }
-
+            
             public string Parse(string text, bool parselong = false) // We implement a path for ref or nonref
             {
                 return Parse(ref text, parselong);
