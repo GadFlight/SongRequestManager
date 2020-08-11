@@ -17,6 +17,7 @@ namespace SongRequestManager
         public bool ClearNoFail = true; // Pressing play will automatically attempt to play the song you selected at the highest difficulty level it has
 
         public int RequestHistoryLimit = 40;
+        public string QueuePolicy = "lrpr";
         public int UserRequestLimit = 2;
         public int SubRequestLimit = 5;
         public int ModRequestLimit = 10;

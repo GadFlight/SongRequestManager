@@ -83,27 +83,6 @@ namespace SongRequestManager
 
         internal static void SRMButtonPressed()
         {
-            List<SongRequest> songs = RequestQueue.Songs;
-            if (songs.Count > 0)
-            {
-                IOrderedEnumerable<SongRequest> songPriorities = songs.OrderBy(x =>
-                {
-                    var id = x.requestor.id;
-                    return RequestTracker.ContainsKey(id) ? RequestTracker[id].lastPlayedTime : DateTime.MinValue;
-                });
-                SongRequest bestSong = songPriorities.First();
-                songs.Remove(bestSong);
-                songs.Insert(0, bestSong);
-                //// Write the modified request queue to file
-                //RequestQueue.Write();
-
-                // Refresh the queue ui
-                _refreshQueue = true;
-
-                //// And write a summary to file
-                //WriteQueueSummaryToFile();
-            }
-
             var soloFlow = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             soloFlow.InvokeMethod<object, SoloFreePlayFlowCoordinator>("PresentFlowCoordinator", _flowCoordinator, null, false, false);
         }
@@ -719,15 +698,31 @@ namespace SongRequestManager
                 //}
 
             RequestTracker[requestor.id].numRequests++;
-                listcollection.add(duplicatelist, song["id"].Value);
-                if ((requestInfo.flags.HasFlag(CmdFlags.MoveToTop)))
-                    RequestQueue.Songs.Insert(0, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
-                else
-                    RequestQueue.Songs.Add(new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
+            listcollection.add(duplicatelist, song["id"].Value);
+            if ((requestInfo.flags.HasFlag(CmdFlags.MoveToTop)))
+                RequestQueue.Songs.Insert(0, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
+            else if (RequestBotConfig.Instance.QueuePolicy == "lrpr")
+            {
+                Plugin.Log($"Starting insert for song {song["key"]}");
+                var reqs = RequestQueue.Songs;
+                var startIx = reqs.FindLastIndex(x => x.requestor.id == requestor.id) + 1;
+                Plugin.Log($"startIx is {startIx}");
+                var seenIds = new HashSet<string>();
+                if (!RequestTracker.ContainsKey(requestor.id)) RequestTracker.Add(requestor.id, new RequestUserTracker());
+                DateTime getLastPlayed(string x) => RequestTracker.ContainsKey(x) ? RequestTracker[x].lastPlayedTime : DateTime.MinValue;
+                var lastPlayed = getLastPlayed(requestor.id);
+                var insertIx = reqs.FindIndex(startIx, x => !seenIds.Add(x.requestor.id) || (startIx == 0 && lastPlayed < getLastPlayed(x.requestor.id)));
+                if (insertIx == -1) insertIx = reqs.Count; // No matches. Insert at end. 
+                Plugin.Log($"Best index is {insertIx}");
+                RequestQueue.Songs.Insert(insertIx, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
+                Plugin.Log("Finished insert");
+            }
+            else
+                RequestQueue.Songs.Add(new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
 
-                RequestQueue.Write();
+            RequestQueue.Write();
 
-                Writedeck(requestor, "savedqueue"); // This can be used as a backup if persistent Queue is turned off.
+            Writedeck(requestor, "savedqueue"); // This can be used as a backup if persistent Queue is turned off.
 
             if (!requestInfo.flags.HasFlag(CmdFlags.SilentResult))
             {
