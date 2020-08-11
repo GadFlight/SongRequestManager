@@ -701,7 +701,7 @@ namespace SongRequestManager
             listcollection.add(duplicatelist, song["id"].Value);
             if ((requestInfo.flags.HasFlag(CmdFlags.MoveToTop)))
                 RequestQueue.Songs.Insert(0, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
-            else if (RequestBotConfig.Instance.QueuePolicy == "lrpr")
+            else if (RequestBotConfig.Instance.QueueRoundRobin)
             {
                 Plugin.Log($"Starting insert for song {song["key"]}");
                 var reqs = RequestQueue.Songs;

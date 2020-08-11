@@ -9,4 +9,5 @@
   <slider-setting text='Moderator Request limit' min='0' max='100' increment='1' value='mod-request-limit' integer-only='true' hover-hint='Maximum requests in queue at one time'></slider-setting>
   <slider-setting text='VIP Request bonus' min='0' max='10' increment='1' value='vip-bonus-requests' integer-only='true' hover-hint='Additional requests allowed in queue'></slider-setting>
   <bool-setting text='Full moderator rights' value='mod-full-rights' hover-hint='Allow moderators access to ALL bot commands. Do you trust your mods?'></bool-setting>
+  <bool-setting text='Round-robin queue' value='queue-round-robin' hover-hint='Try to alternate songs requested by different users.'></bool-setting>
 </scrollable-settings-container>

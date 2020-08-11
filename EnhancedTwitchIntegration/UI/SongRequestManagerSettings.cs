@@ -78,5 +78,12 @@ namespace SongRequestManager.UI
             get => RequestBotConfig.Instance.ModFullRights;
             set => RequestBotConfig.Instance.ModFullRights = value;
         }
+
+        [UIValue("queue-round-robin")]
+        public bool QueueRoundRobin
+        {
+            get => RequestBotConfig.Instance.QueueRoundRobin;
+            set => RequestBotConfig.Instance.QueueRoundRobin = value;
+        }
     }
 }
