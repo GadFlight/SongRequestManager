@@ -3,6 +3,13 @@ Song Request Manager is an integrated, fully Customizable song request bot and C
 
 This mod has been in use for many months, and is constantly updated. While this is a first official release as a standalone mod, its been in continuous use for months now, and is extensively tested. The bot is compatible with release 0.13.1. 
 
+This forked version of the Song Request Manager has been forked by GadFlight, and various small but significant capabilities added:
+* The ability to have the queue manager do "round robin" (or technically "least recently played requestor") song scheduling.
+* Additional template variables "trueSongName", "trueSongAuthor", "trueLevelAuthor" which infer proper values across different flavors of BeatSaver metadata.
+* Addition of the "user" variable to the "!queue" command response.
+* Reset request list view after a request, so players don't accidentally forget about the requests at the top page.
+* Add "Request rejected" to error messages, so requestors know *why* they are getting the message.
+
 # Current State
 
 The current bot is compatible with Release 1.0.0. Use the latest installer.
@@ -23,7 +30,7 @@ then filter out the ! lines on your tts client.
   Display your song request queue and status directly on the stream.
   Different request limits based on the users subscription level.
   A full set of moderator commands to manage the queue.
-  An ingame console allowing the player to play the requested songs without having to search or downnload.
+  An ingame console allowing the player to play the requested songs without having to search or download.
   A full featured twitch keyboard allowing interaction with twitch chat!
   Direct search of song directly from the console, without ever having to exit to song browser or downloader.
   Pick and play any of the latest 40 posted songs off Beatsaver.com.
@@ -80,4 +87,5 @@ This plugin is free. If you wish to help us out though, tips to
 [our Paypal](https://paypal.me/sehria) are always appreciated.
 
 # Download
-[Click here to download the latest SongRequestManager.dll](https://github.com/angturil/SongRequestManager/releases/download/1.3.1/SongRequestManager.dll)
+[Click here to download GadFlight's latest SongRequestManager.dll](https://github.com/GadFlight/SongRequestManager/releases/download/1.3.1/SongRequestManager.dll)
+[Click here to download angturil's original SongRequestManager.dll](https://github.com/angturil/SongRequestManager/releases/download/1.3.1/SongRequestManager.dll)
