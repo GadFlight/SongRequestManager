@@ -3,7 +3,7 @@ Song Request Manager is an integrated, fully Customizable song request bot and C
 
 This mod has been in use for many months, and is constantly updated. While this is a first official release as a standalone mod, its been in continuous use for months now, and is extensively tested. The bot is compatible with release 0.13.1. 
 
-This forked version of the Song Request Manager has been forked by GadFlight, and various small but significant capabilities added:
+This version of the Song Request Manager has been forked by GadFlight, and various small but significant capabilities added:
 * The ability to have the queue manager do "round robin" (or technically "least recently played requestor") song scheduling.
 * Additional template variables "trueSongName", "trueSongAuthor", "trueLevelAuthor" which infer proper values across different flavors of BeatSaver metadata.
 * Addition of the "user" variable to the "!queue" command response.
