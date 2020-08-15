@@ -88,4 +88,5 @@ This plugin is free. If you wish to help us out though, tips to
 
 # Download
 [Click here to download GadFlight's latest SongRequestManager.dll](https://github.com/GadFlight/SongRequestManager/releases/download/1.3.1/SongRequestManager.dll)
+
 [Click here to download angturil's original SongRequestManager.dll](https://github.com/angturil/SongRequestManager/releases/download/1.3.1/SongRequestManager.dll)
