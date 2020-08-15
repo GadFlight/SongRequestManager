@@ -17,20 +17,20 @@ namespace SongRequestManager
         // BUG: This one needs to be cleaned up a lot imo
         // BUG: This file needs to be split up a little, but not just yet... Its easier for me to move around in one massive file, since I can see the whole thing at once. 
 
-        static StringBuilder AddSongToQueueText = new StringBuilder( "Request %songName% %songSubName%/%authorName% %Rating% (%version%) added to queue.");
-        static StringBuilder LookupSongDetail= new StringBuilder ("%songName% %songSubName%/%authorName% %Rating% (%version%)");
-        static StringBuilder BsrSongDetail=new StringBuilder ("%songName% %songSubName%/%authorName% %Rating% (%version%)");
-        static StringBuilder LinkSonglink=new StringBuilder ("%songName% %songSubName%/%authorName% %Rating% (%version%) %BeatsaverLink%");
-        static StringBuilder NextSonglink=new StringBuilder ("%songName% %songSubName%/%authorName% %Rating% (%version%) requested by %user% is next.");
+        static StringBuilder AddSongToQueueText = new StringBuilder("Request %trueSongName% [%trueSongAuthor%/%trueLevelAuthor%] %Rating% (%version%) added to queue.");
+        static StringBuilder LookupSongDetail= new StringBuilder ("%trueSongName% [%trueSongAuthor%/%trueLevelAuthor%] %Rating% (%version%)");
+        static StringBuilder BsrSongDetail=new StringBuilder ("%trueSongName% [%trueSongAuthor%/%trueLevelAuthor%] %Rating% (%version%)");
+        static StringBuilder LinkSonglink=new StringBuilder ("%trueSongName% [%trueSongAuthor%/%trueLevelAuthor%] %Rating% (%version%) %BeatsaverLink%");
+        static StringBuilder NextSonglink=new StringBuilder ("%trueSongName% [%trueSongAuthor%/%trueLevelAuthor%] %Rating% (%version%) requested by %user% is next.");
         static public  StringBuilder SongHintText=new StringBuilder ("Requested by %user%%LF%Status: %Status%%Info%%LF%%LF%<size=60%>Request Time: %RequestTime%</size>");
         static StringBuilder QueueTextFileFormat=new StringBuilder ("%songName%%LF%");         // Don't forget to include %LF% for these. 
 
-        static public StringBuilder QueueListRow2 = new StringBuilder("%authorName% (%id%) <color=white>%songlength%</color>");
+        static public StringBuilder QueueListRow2 = new StringBuilder("<size=60%>%trueSongAuthor%/%trueLevelAuthor% (%id%) <color=white>%songlength%</color></size>");
 
         static StringBuilder BanSongDetail = new StringBuilder("Blocking %songName%/%authorName% (%version%)");
 
-        static StringBuilder QueueListFormat= new StringBuilder("%songName% (%version%)");
-        static StringBuilder HistoryListFormat = new StringBuilder("%songName% (%version%)");
+        static StringBuilder QueueListFormat= new StringBuilder("%user%: %trueSongName% (%version%)");
+        static StringBuilder HistoryListFormat = new StringBuilder("%trueSongName% (%version%)");
 
         static StringBuilder AddSortOrder = new StringBuilder("-rating +id");
         static StringBuilder LookupSortOrder = new StringBuilder("-rating +id");

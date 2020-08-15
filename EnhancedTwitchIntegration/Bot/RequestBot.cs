@@ -662,7 +662,7 @@ namespace SongRequestManager
                 // Display reason why chosen song was rejected, if filter is triggered. Do not add filtered songs
                 if (errorMessage != "")
                 {
-                    QueueChatMessage(errorMessage);
+                    QueueChatMessage($"Request rejected: {errorMessage}");
                     return;
                 }
 
@@ -703,19 +703,15 @@ namespace SongRequestManager
                 RequestQueue.Songs.Insert(0, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
             else if (RequestBotConfig.Instance.QueueRoundRobin)
             {
-                Plugin.Log($"Starting insert for song {song["key"]}");
                 var reqs = RequestQueue.Songs;
                 var startIx = reqs.FindLastIndex(x => x.requestor.id == requestor.id) + 1;
-                Plugin.Log($"startIx is {startIx}");
                 var seenIds = new HashSet<string>();
                 if (!RequestTracker.ContainsKey(requestor.id)) RequestTracker.Add(requestor.id, new RequestUserTracker());
                 DateTime getLastPlayed(string x) => RequestTracker.ContainsKey(x) ? RequestTracker[x].lastPlayedTime : DateTime.MinValue;
                 var lastPlayed = getLastPlayed(requestor.id);
                 var insertIx = reqs.FindIndex(startIx, x => !seenIds.Add(x.requestor.id) || (startIx == 0 && lastPlayed < getLastPlayed(x.requestor.id)));
                 if (insertIx == -1) insertIx = reqs.Count; // No matches. Insert at end. 
-                Plugin.Log($"Best index is {insertIx}");
                 RequestQueue.Songs.Insert(insertIx, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
-                Plugin.Log("Finished insert");
             }
             else
                 RequestQueue.Songs.Add(new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));

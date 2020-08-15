@@ -402,7 +402,12 @@ namespace SongRequestManager
 
             _songListTableView.ReloadData();
 
-            if (_selectedRow == -1) return;
+            if (_selectedRow == -1)
+            {
+                // Always return to the top of the list if there's no selection.
+                _songListTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, true);
+                return;
+            }
 
             if (NumberOfCells() > _selectedRow)
             {
