@@ -8,6 +8,7 @@ using UnityEngine;
 using IPA.Utilities;
 using IPA.Loader;
 using SongCore;
+using SongCore.Utilities;
 
 namespace SongRequestManager
 {
@@ -225,10 +226,14 @@ namespace SongRequestManager
                             // disable no fail gamepaly modifier
                             var gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
                             gameplayModifiersPanelController.gameplayModifiers.noFail = false;
- 
+                            var playerPanelController = Resources.FindObjectsOfTypeAll<PlayerSettingsPanelController>().First();
+                            playerPanelController.playerSpecificSettings.leftHanded = false;
+                            gameplayModifiersPanelController.gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Normal;
+
                             //gameplayModifiersPanelController.gameplayModifiers.ResetToDefault();
 
                             gameplayModifiersPanelController.Refresh();
+                            playerPanelController.Refresh();
                         }
                         catch
                         { }
