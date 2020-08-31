@@ -218,21 +218,29 @@ namespace SongRequestManager
                     Plugin.Log("Selected song with index " + songIndex);
                     callback?.Invoke(true);
 
-                    if (RequestBotConfig.Instance.ClearNoFail)
+                    if (RequestBotConfig.Instance.ClearNoFail || RequestBotConfig.Instance.ClearAllMods || RequestBotConfig.Instance.ClearLeftHanded)
                     {
                         try
                         {
-                            // disable no fail gamepaly modifier
-                            var gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
-                            gameplayModifiersPanelController.gameplayModifiers.noFail = false;
-                            var playerPanelController = Resources.FindObjectsOfTypeAll<PlayerSettingsPanelController>().First();
-                            playerPanelController.playerSpecificSettings.leftHanded = false;
-                            gameplayModifiersPanelController.gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Normal;
-
-                            //gameplayModifiersPanelController.gameplayModifiers.ResetToDefault();
-
-                            gameplayModifiersPanelController.Refresh();
-                            playerPanelController.Refresh();
+                            if (RequestBotConfig.Instance.ClearNoFail)
+                            {
+                                // disable no fail gamepaly modifier
+                                var gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
+                                gameplayModifiersPanelController.gameplayModifiers.noFail = false;
+                                gameplayModifiersPanelController.Refresh();
+                            }
+                            if (RequestBotConfig.Instance.ClearAllMods)
+                            {
+                                var gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
+                                gameplayModifiersPanelController.gameplayModifiers.ResetToDefault();
+                                gameplayModifiersPanelController.Refresh();
+                            }
+                            if (RequestBotConfig.Instance.ClearLeftHanded)
+                            {
+                                var playerPanelController = Resources.FindObjectsOfTypeAll<PlayerSettingsPanelController>().First();
+                                playerPanelController.playerSpecificSettings.leftHanded = false;
+                                playerPanelController.Refresh();
+                            }
                         }
                         catch
                         { }
