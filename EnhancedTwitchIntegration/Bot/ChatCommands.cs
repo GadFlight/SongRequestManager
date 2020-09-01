@@ -818,6 +818,7 @@ namespace SongRequestManager
                 RequestQueue.Songs.Insert(0, new SongRequest(song, state.user, DateTime.UtcNow, RequestStatus.SongSearch, "search result"));
             else
                 RequestQueue.Songs.Add(new SongRequest(song, state.user, DateTime.UtcNow, RequestStatus.SongSearch, "search result"));
+            MaybeReorderQueue();
         }
 
         #region Move Request To Top/Bottom
@@ -861,9 +862,14 @@ namespace SongRequestManager
 
                     // Then readd it at the appropriate position
                     if (top)
+                    {
                         RequestQueue.Songs.Insert(0, req);
+                        if (RequestTracker.ContainsKey(req.requestor.Id))
+                            RequestTracker[req.requestor.Id].lastPlayedTime = DateTime.MinValue;
+                    }
                     else
                         RequestQueue.Songs.Add(req);
+                    MaybeReorderQueue();
 
                     // Write the modified request queue to file
                     RequestQueue.Write();
@@ -1136,6 +1142,7 @@ namespace SongRequestManager
                 }
                 catch { }
             }
+            MaybeReorderQueue();
 
             RequestQueue.Write();
 

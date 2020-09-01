@@ -688,22 +688,26 @@ namespace SongRequestManager
 
             RequestTracker[requestor.Id].numRequests++;
             listcollection.add(duplicatelist, song["id"].Value);
-            if ((requestInfo.flags.HasFlag(CmdFlags.MoveToTop)))
+            if ((requestInfo.flags.HasFlag(CmdFlags.MoveToTop))) { 
                 RequestQueue.Songs.Insert(0, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
-            else if (RequestBotConfig.Instance.QueueRoundRobin)
-            {
-                var reqs = RequestQueue.Songs;
-                var startIx = reqs.FindLastIndex(x => x.requestor.Id == requestor.Id) + 1;
-                var seenIds = new HashSet<string>();
-                if (!RequestTracker.ContainsKey(requestor.Id)) RequestTracker.Add(requestor.Id, new RequestUserTracker());
-                DateTime getLastPlayed(string x) => RequestTracker.ContainsKey(x) ? RequestTracker[x].lastPlayedTime : DateTime.MinValue;
-                var lastPlayed = getLastPlayed(requestor.Id);
-                var insertIx = reqs.FindIndex(startIx, x => !seenIds.Add(x.requestor.Id) || (startIx == 0 && lastPlayed < getLastPlayed(x.requestor.Id)));
-                if (insertIx == -1) insertIx = reqs.Count; // No matches. Insert at end. 
-                RequestQueue.Songs.Insert(insertIx, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
+                if (RequestTracker.ContainsKey(requestor.Id))
+                    RequestTracker[requestor.Id].lastPlayedTime = DateTime.MinValue;
             }
+            //else if (RequestBotConfig.Instance.QueueRoundRobin)
+            //{
+            //    var reqs = RequestQueue.Songs;
+            //    var startIx = reqs.FindLastIndex(x => x.requestor.Id == requestor.Id) + 1;
+            //    var seenIds = new HashSet<string>();
+            //    if (!RequestTracker.ContainsKey(requestor.Id)) RequestTracker.Add(requestor.Id, new RequestUserTracker());
+            //    DateTime getLastPlayed(string x) => RequestTracker.ContainsKey(x) ? RequestTracker[x].lastPlayedTime : DateTime.MinValue;
+            //    var lastPlayed = getLastPlayed(requestor.Id);
+            //    var insertIx = reqs.FindIndex(startIx, x => !seenIds.Add(x.requestor.Id) || (startIx == 0 && lastPlayed < getLastPlayed(x.requestor.Id)));
+            //    if (insertIx == -1) insertIx = reqs.Count; // No matches. Insert at end. 
+            //    RequestQueue.Songs.Insert(insertIx, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
+            //}
             else
                 RequestQueue.Songs.Add(new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
+            MaybeReorderQueue();
 
             RequestQueue.Write();
 
@@ -721,6 +725,29 @@ namespace SongRequestManager
             });
         }
 
+        private static void MaybeReorderQueue()
+        {
+            if (!RequestBotConfig.Instance.QueueRoundRobin)
+                return;
+            var old_reqs = RequestQueue.Songs;
+            var new_reqs = new List<SongRequest>();
+            DateTime getLastPlayed(string x) => RequestTracker.ContainsKey(x) ? RequestTracker[x].lastPlayedTime : DateTime.MinValue;
+            // The overall efficiency of this loop is roughly O(<unique-requestors>^2). It could be reduced to O(N log N) fairly easily,
+            // but might not be as maintainable. This should be good enough for any but the largest streams.
+            foreach (var request in old_reqs)
+            {
+                var requestor = request.requestor;
+                var startIx = new_reqs.FindLastIndex(x => x.requestor.Id == requestor.Id) + 1;
+                var seenIds = new HashSet<string>();
+                var lastPlayed = getLastPlayed(requestor.Id);
+                var insertIx = new_reqs.FindIndex(startIx, x => !seenIds.Add(x.requestor.Id) || (startIx == 0 && lastPlayed < getLastPlayed(x.requestor.Id)));
+                if (insertIx == -1) insertIx = new_reqs.Count; // No matches. Insert at end. 
+                new_reqs.Insert(insertIx, request);
+            }
+            RequestQueue.Songs.RemoveRange(0, old_reqs.Count);
+            RequestQueue.Songs.AddRange(new_reqs);
+        }
+
         private static async void ProcessSongRequest(int index, bool fromHistory = false)
         {
             if ((RequestQueue.Songs.Count > 0 && !fromHistory) || (RequestHistory.Songs.Count > 0 && fromHistory))
@@ -729,11 +756,12 @@ namespace SongRequestManager
                 if (!fromHistory)
                 {
                     SetRequestStatus(index, RequestStatus.Played);
-                    request = DequeueRequest(index);
+                    request = RequestQueue.Songs.ElementAt(index);
                     var requestorId = request.requestor.Id;
                     if (!RequestTracker.ContainsKey(requestorId))
                         RequestTracker.Add(requestorId, new RequestUserTracker());
                     RequestTracker[requestorId].lastPlayedTime = DateTime.Now;
+                    DequeueRequest(request);
                 }
                 else
                 {
@@ -947,6 +975,7 @@ namespace SongRequestManager
                 RequestHistory.Songs.RemoveRange(RequestHistory.Songs.Count - diff - 1, diff);
             }
             RequestQueue.Songs.Remove(request);
+            MaybeReorderQueue();
             RequestHistory.Write();
             RequestQueue.Write();
 
@@ -1063,6 +1092,15 @@ namespace SongRequestManager
             newstate.info = "Unfiltered";
             return ProcessSongRequest(newstate);
         }
+
+        private string ModAddAs(ParseState state)
+        {
+            ParseState newstate = new ParseState(state); // Must use copies here, since these are all threads
+            newstate.flags |= CmdFlags.NoFilter;
+            newstate.info = "Unfiltered";
+            return ProcessSongRequest(newstate);
+        }
+
 
 
         private string ProcessSongRequest(ParseState state)
