@@ -693,18 +693,6 @@ namespace SongRequestManager
                 if (RequestTracker.ContainsKey(requestor.Id))
                     RequestTracker[requestor.Id].lastPlayedTime = DateTime.MinValue;
             }
-            //else if (RequestBotConfig.Instance.QueueRoundRobin)
-            //{
-            //    var reqs = RequestQueue.Songs;
-            //    var startIx = reqs.FindLastIndex(x => x.requestor.Id == requestor.Id) + 1;
-            //    var seenIds = new HashSet<string>();
-            //    if (!RequestTracker.ContainsKey(requestor.Id)) RequestTracker.Add(requestor.Id, new RequestUserTracker());
-            //    DateTime getLastPlayed(string x) => RequestTracker.ContainsKey(x) ? RequestTracker[x].lastPlayedTime : DateTime.MinValue;
-            //    var lastPlayed = getLastPlayed(requestor.Id);
-            //    var insertIx = reqs.FindIndex(startIx, x => !seenIds.Add(x.requestor.Id) || (startIx == 0 && lastPlayed < getLastPlayed(x.requestor.Id)));
-            //    if (insertIx == -1) insertIx = reqs.Count; // No matches. Insert at end. 
-            //    RequestQueue.Songs.Insert(insertIx, new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
-            //}
             else
                 RequestQueue.Songs.Add(new SongRequest(song, requestor, requestInfo.requestTime, RequestStatus.Queued, requestInfo.requestInfo));
             MaybeReorderQueue();
