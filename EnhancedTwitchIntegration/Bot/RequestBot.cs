@@ -1081,16 +1081,6 @@ namespace SongRequestManager
             return ProcessSongRequest(newstate);
         }
 
-        private string ModAddAs(ParseState state)
-        {
-            ParseState newstate = new ParseState(state); // Must use copies here, since these are all threads
-            newstate.flags |= CmdFlags.NoFilter;
-            newstate.info = "Unfiltered";
-            return ProcessSongRequest(newstate);
-        }
-
-
-
         private string ProcessSongRequest(ParseState state)
         {
             try
