@@ -30,6 +30,7 @@ namespace SongRequestManager
         static StringBuilder BanSongDetail = new StringBuilder("Blocking %songName%/%authorName% (%version%)");
 
         static StringBuilder QueueListFormat= new StringBuilder("%user%: %trueSongName% (%version%)");
+        static StringBuilder MyQueueListFormat = new StringBuilder("#%queueIndex%: %trueSongName% (%version%)");
         static StringBuilder HistoryListFormat = new StringBuilder("%trueSongName% (%version%)");
 
         static StringBuilder AddSortOrder = new StringBuilder("-rating +id");
@@ -975,6 +976,74 @@ namespace SongRequestManager
             }
             msg.end($" ... and {RequestQueue.Songs.Count - msg.Count} more songs.", "Queue is empty.");
             return;
+
+        }
+
+        private void ListMyQueue(TwitchUser requestor, string request) {
+
+            var msg = new QueueLongMessage(RequestBotConfig.Instance.maximumqueuemessages);
+
+            var indexed = RequestQueue.Songs.Select((r, i) => new { Index = i, Request = r });
+            var myRequests = indexed.Where(ir => ir.Request.requestor.Id == requestor.Id).ToArray();
+            foreach (var ir in myRequests) {
+                var req = ir.Request;
+                if (msg.Add(new DynamicText().Add("queueIndex", (ir.Index+1).ToString()).AddUser(ref req.requestor).AddSong(ref req.song).Parse(MyQueueListFormat), ", ")) 
+                    break;
+            }
+            msg.end($" ... and {myRequests.Count() - msg.Count} more songs.", "Your queue is empty.");
+            return;
+        }
+        //#region Unmap/Remap Commands
+        //private void Remap(TwitchUser requestor, string request) {
+        //    string[] parts = request.Split(',', ' ');
+
+        //    if (parts.Length < 2) {
+        //        QueueChatMessage("usage: !remap <songid>,<songid>, omit the <>'s");
+        //        return;
+        //    }
+
+        //    if (songremap.ContainsKey(parts[0])) songremap.Remove(parts[0]);
+        //    songremap.Add(parts[0], parts[1]);
+        //    QueueChatMessage($"Song {parts[0]} remapped to {parts[1]}");
+        //    WriteRemapList();
+        //}
+
+        private void Promote(TwitchUser requestor, string request) {
+            try {
+                var parts = request.Split(new char[] { ' ', ',' });
+                var code = parts[0];
+                var offset = parts.Count() > 1 ? int.Parse(parts[1]) : int.MaxValue;
+                var indexed = RequestQueue.Songs.Select((r, i) => new { Index = i, Request = r });
+                var myRequests = indexed.Where(ir => ir.Request.requestor.Id == requestor.Id).ToList();
+                int idx = myRequests.FindIndex(ir => ir.Request.song["version"] == code);
+                if (idx == -1) {
+                    QueueChatMessage($"You have no request with code {code}");
+                    return;
+                }
+                int newIdx = Math.Min(Math.Max(idx - offset, 0), myRequests.Count() - 1);
+                int newGlobalPosition = myRequests[newIdx].Index + 1;
+                string songName = myRequests[idx].Request.song["trueSongName"];
+                var positions = myRequests.Select((r, i) => r.Index);
+                var requests = myRequests.Select((r, i) => r.Request).ToList();
+                requests.RemoveAt(idx);
+                requests.Insert(newIdx, myRequests[idx].Request);
+                foreach (var ir in positions.Zip(requests, (i,r) => new { Index = i, Request = r })) {
+                    RequestQueue.Songs[ir.Index] = ir.Request;
+                }
+                // This preserves order, so why reorder again.
+                //MaybeReorderQueue();
+                // Write the modified request queue to file
+                RequestQueue.Write();
+
+                // Refresh the queue ui
+                _refreshQueue = true;
+
+                // And write a summary to file
+                WriteQueueSummaryToFile();
+                QueueChatMessage($"Song '{songName}' moved to #{newIdx+1} among your requests (#{newGlobalPosition} overall).");
+            } catch {
+                QueueChatMessage("usage: !promote <songid> [<places>]");
+            }
 
         }
 
