@@ -20,7 +20,8 @@ using BeatSaberMarkupLanguage;
 using System.Threading.Tasks;
 using System.IO.Compression;
 using ChatCore.Models.Twitch;
-using ChatCore.SimpleJSON;
+using ChatCore.Utilities;
+using HMUI;
 
 namespace SongRequestManager
 {
@@ -77,11 +78,21 @@ namespace SongRequestManager
 
         internal static void SRMButtonPressed()
         {
-            var soloFlow = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
-            soloFlow.InvokeMethod<object, SoloFreePlayFlowCoordinator>("PresentFlowCoordinator", _flowCoordinator, null, false, false);
+            FlowCoordinator flowCoordinator;
+
+            if (Plugin.gameMode == Plugin.GameMode.Solo)
+            {
+                flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
+            }
+            else
+            {
+                flowCoordinator = Resources.FindObjectsOfTypeAll<MultiplayerLevelSelectionFlowCoordinator>().First();
+            }
+
+            flowCoordinator.InvokeMethod<object, FlowCoordinator>("PresentFlowCoordinator", _flowCoordinator, null, ViewController.AnimationDirection.Horizontal, false, false);
         }
 
-        internal static void SetTitle(string title)
+    internal static void SetTitle(string title)
         {
             _flowCoordinator.SetTitle(title);
         }
@@ -90,17 +101,29 @@ namespace SongRequestManager
         {
             try
             {
-                var _levelListViewController = Resources.FindObjectsOfTypeAll<LevelCollectionViewController>().First();
-                if (_levelListViewController)
-                    {
-                    _requestButton = UIHelper.CreateUIButton(_levelListViewController.rectTransform, "OkButton", new Vector2(66, -3.5f),
-                        new Vector2(9f, 5.5f), () => { _requestButton.interactable = false; SRMButtonPressed(); _requestButton.interactable = true; }, "SRM");
+                var _levelListViewController = Resources.FindObjectsOfTypeAll<SelectLevelCategoryViewController>().Last();
 
-                    (_requestButton.transform as RectTransform).anchorMin = new Vector2(1, 1);
-                    (_requestButton.transform as RectTransform).anchorMax = new Vector2(1, 1);
+                _levelListViewController.didActivateEvent += _levelListViewController_didActivateEvent;
+
+                if (_levelListViewController)
+                {
+                    // move the icon control
+                    var iconSegmentedControl = _levelListViewController.GetField<IconSegmentedControl, SelectLevelCategoryViewController>("_levelFilterCategoryIconSegmentedControl");
+                    ((RectTransform)iconSegmentedControl.transform).anchoredPosition = new Vector2(0, 4.5f);
+
+                    _requestButton = _levelListViewController.CreateUIButton("SRMButton", "PracticeButton", new Vector2(14, -4.5f), new Vector2(15f, 105f),
+                        () =>
+                        {
+                            _requestButton.interactable = false;
+                            SRMButtonPressed();
+                            _requestButton.interactable = true;
+                        },
+                        "SRM");
+
 
                     _requestButton.ToggleWordWrapping(false);
-                    _requestButton.SetButtonTextSize(3.5f);
+                    _requestButton.SetButtonTextSize(5f);
+
                     UIHelper.AddHintText(_requestButton.transform as RectTransform, "Manage the current request queue");
 
                     UpdateRequestUI();
@@ -127,6 +150,11 @@ namespace SongRequestManager
 
             if (Instance) return;
             new GameObject("SongRequestManager").AddComponent<RequestBot>();
+        }
+
+        private static void _levelListViewController_didActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        {
+            UpdateRequestUI();
         }
 
         public static bool AddKeyboard(KEYBOARD keyboard, string keyboardname, float scale = 0.5f)
@@ -299,10 +327,16 @@ namespace SongRequestManager
 
                 }
 
+                bool resetsession = true;
+
                 try
                 {
                     TimeSpan PlayedAge = GetFileAgeDifference(playedfilename);
-                if (PlayedAge < TimeSpan.FromHours(RequestBotConfig.Instance.SessionResetAfterXHours)) played = ReadJSON(playedfilename); // Read the songsplayed file if less than x hours have passed 
+                    if (PlayedAge < TimeSpan.FromHours(RequestBotConfig.Instance.SessionResetAfterXHours))
+                    {
+                        resetsession = false;
+                        played = ReadJSON(playedfilename); // Read the songsplayed file if less than x hours have passed
+                    } 
                 }
                 catch (Exception ex)
                 {
@@ -317,7 +351,8 @@ namespace SongRequestManager
 
                 if (RequestBotConfig.Instance.LocalSearch) MapDatabase.LoadCustomSongs(); // This is a background process
 
-                RequestQueue.Read(); // Might added the timespan check for this too. To be decided later.
+                if (resetsession==false || RequestBotConfig.Instance.PersistentRequestQueue) RequestQueue.Read(); // Might added the timespan check for this too. To be decided later.
+   
                 RequestHistory.Read();
                 listcollection.OpenList("banlist.unique");
 
@@ -434,7 +469,11 @@ namespace SongRequestManager
             MapperAllowList(ChatHandler.Self, "mapper.list");
             accesslist("mapper.list");
 
-            loaddecks(ChatHandler.Self, ""); // Load our default deck collection
+            string dummy = "";
+
+            TwitchUser user = ChatHandler.Self;
+
+            loaddecks(new ParseState(ref user,ref dummy,CmdFlags.Silent,ref dummy)); // Load our default deck collection
             // BUG: Command failure observed once, no permission to use /chatcommand. Possible cause: OurTwitchUser isn't authenticated yet.
 
             RunScript(ChatHandler.Self, "startup.script"); // Run startup script. This can include any bot commands.
@@ -918,7 +957,7 @@ namespace SongRequestManager
                 #if UNRELEASED
                 if (!request.song.IsNull) // Experimental!
                 {
-                    ChatHandler.Send("marker "+ new DynamicText().AddUser(ref request.requestor).AddSong(request.song).Parse(NextSonglink.ToString()), true);
+                    //ChatHandler.Send("marker "+ new DynamicText().AddUser(ref request.requestor).AddSong(request.song).Parse("%version% songName%"), true);
                 }
                 #endif
             }
@@ -934,15 +973,23 @@ namespace SongRequestManager
 
                 if (_requestButton != null)
                 {
-                    _requestButton.interactable = true;
+                    var enabled = Plugin.gameMode == Plugin.GameMode.Solo;
+                    if (Plugin.gameMode == Plugin.GameMode.Online)
+                    {
+                        var mpFlowCoordinator = Resources.FindObjectsOfTypeAll<MultiplayerLevelSelectionFlowCoordinator>().First();
+                        enabled = mpFlowCoordinator.GetProperty<bool, MultiplayerLevelSelectionFlowCoordinator>("enableCustomLevels");
+                    }
+                    _requestButton.enabled = enabled;
+
+                    _requestButton.interactable = enabled;
 
                     if (RequestQueue.Songs.Count == 0)
                     {
-                        _requestButton.gameObject.GetComponentInChildren<Image>().color = Color.red;
+                        _requestButton.SetButtonUnderlineColor(Color.red);
                     }
                     else
                     {
-                        _requestButton.gameObject.GetComponentInChildren<Image>().color = Color.green;
+                        _requestButton.SetButtonUnderlineColor(Color.green);
                     }
                 }
             }
@@ -951,7 +998,6 @@ namespace SongRequestManager
                 Plugin.Log(ex.ToString());
             }
         }
-
 
         public static void DequeueRequest(SongRequest request, bool updateUI = true)
         {

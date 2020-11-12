@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 using TMPro;
 using System.Threading.Tasks;
 using ChatCore.Models.Twitch;
-using ChatCore.SimpleJSON;
+using ChatCore.Utilities;
 
 //using BeatBits;
 
@@ -279,20 +279,24 @@ namespace SongRequestManager
         //}
 
         #region Deck Manager
-        private void loaddecks(TwitchUser requestor, string request)
+        private string loaddecks(ParseState state)
         {
-            createdeck(requestor, RequestBotConfig.Instance.DeckList.ToLower());
+            //createdeck(state.user, RequestBotConfig.Instance.DeckList.ToLower());
+
+            string decklist = RequestBotConfig.Instance.DeckList.ToLower();
+            state.parameter = decklist;
+            return createdeck(state);
         }
 
-        private void createdeck(TwitchUser requestor, string request)
+        private string createdeck(ParseState state)
         {
-            request = request.ToLower();
+            string request = state.parameter.ToLower();
             string[] decks = request.Split(new char[] { ',', ' ', '\t' });
 
             if (decks[0] == "")
             {
                 QueueChatMessage($"usage: deck <deckname> ... omit <>'s.");
-                return;
+                return success;
             }
 
             string msg = "deck";
@@ -308,7 +312,7 @@ namespace SongRequestManager
 
                     if (integerStrings.Length == 0)
                     {
-                        //QueueChatMessage($"Creating deck: {req}");
+                        if (!state.flags.HasFlag(CmdFlags.Silent)) QueueChatMessage($"Creating deck: {req}");
                     }
 
                     //if (integerStrings.Length > 0)
@@ -329,7 +333,8 @@ namespace SongRequestManager
                     msg += ($"!{req} (invalid) ");
                 }
             }
-            //QueueChatMessage(msg);
+            if (!state.flags.HasFlag(CmdFlags.Silent)) QueueChatMessage(msg);
+            return success;
         }
 
         // Toggle a card in a deck
