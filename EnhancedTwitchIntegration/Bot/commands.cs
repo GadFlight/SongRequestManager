@@ -137,7 +137,7 @@ namespace SongRequestManager
 
             new COMMAND("!modadd").Action(ModAdd).Help(Mod, "usage: %alias%<songname> or <song id>, omit <,>'s. %|%This adds a song to the request queue. This ignores ALL filters including bans.", _atleast1);
             new COMMAND("!mtt").Action(MoveRequestToTop).Help(Mod, "usage: %alias%<songname>,<username>,<song id> %|%... Moves a song to the top of the request queue.", _atleast1);
-            new COMMAND("!promote").Action(Promote).Help(Mod, "usage: %alias%<song id> [<places>] %|%... Moves a song up (or down) relative to your other requests.", _atleast1);
+            new COMMAND("!promote").Action(Promote).Help(Everyone, "usage: %alias%<song id> [<places>] %|%... Moves a song up (or down) relative to your other requests.", _atleast1);
 
             new COMMAND("!att").Action(AddToTop).Help(Mod, "usage: %alias%<songname> or <song id>, omit <,>'s. %|%This adds a song to the top of the request queue. Try and be a little specific. You can look up songs on %beatsaver%", _atleast1);
             new COMMAND(new string[] { "!last", "!demote", "!later" }).Action(MoveRequestToBottom).Help(Mod, "usage: %alias%<songname>,<username>,<song id> %|%... Moves a song to the bottom of the request queue.", _atleast1);
