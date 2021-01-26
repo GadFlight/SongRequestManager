@@ -116,35 +116,23 @@ namespace SongRequestManager
 
                     Plugin.Log("Selected song with index " + songIndex);
                     callback?.Invoke(true);
-
-                    if (RequestBotConfig.Instance.ClearNoFail || RequestBotConfig.Instance.ClearAllMods || RequestBotConfig.Instance.ClearLeftHanded)
-                    {
-                        try
-                        {
-                            if (RequestBotConfig.Instance.ClearNoFail)
-                            {
-                                // disable no fail gamepaly modifier
-                                var gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
-                                gameplayModifiersPanelController.gameplayModifiers.noFail = false;
-                                gameplayModifiersPanelController.Refresh();
+                    if (RequestBotConfig.Instance.ClearNoFail || RequestBotConfig.Instance.ClearAllMods) {
+                        try {
+                            // disable no fail gamepaly modifier
+                            var gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
+                            var gamePlayModifierToggles = gameplayModifiersPanelController.GetField<GameplayModifierToggle[], GameplayModifiersPanelController>("_gameplayModifierToggles");
+                            foreach (var gamePlayModifierToggle in gamePlayModifierToggles) {
+                                if (RequestBotConfig.Instance.ClearAllMods || 
+                                    (RequestBotConfig.Instance.ClearNoFail && gamePlayModifierToggle.gameplayModifier.modifierNameLocalizationKey == "MODIFIER_NO_FAIL")) {
+                                    gameplayModifiersPanelController.SetToggleValueWithGameplayModifierParams(gamePlayModifierToggle.gameplayModifier, false);
+                                }
                             }
-                            if (RequestBotConfig.Instance.ClearAllMods)
-                            {
-                                var gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
-                                gameplayModifiersPanelController.gameplayModifiers.ResetToDefault();
-                                gameplayModifiersPanelController.Refresh();
-                            }
-                            if (RequestBotConfig.Instance.ClearLeftHanded)
-                            {
-                                var playerPanelController = Resources.FindObjectsOfTypeAll<PlayerSettingsPanelController>().First();
-                                playerPanelController.playerSpecificSettings.leftHanded = false;
-                                playerPanelController.Refresh();
-                            }
+                            gameplayModifiersPanelController.RefreshTotalMultiplierAndRankUI();
                         }
-                        catch
-                        { }
+                        catch { }
 
                     }
+
                     yield break;
                 }
             }

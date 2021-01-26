@@ -17,7 +17,6 @@ namespace SongRequestManager
         public bool AutoplaySong = false; // Pressing play will automatically attempt to play the song you selected at the highest difficulty level it has
         public bool ClearNoFail = true;
         public bool ClearAllMods = false;
-        public bool ClearLeftHanded = false;
 
         public int RequestHistoryLimit = 40;
         public bool QueueRoundRobin = false;
