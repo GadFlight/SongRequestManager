@@ -19,7 +19,7 @@ namespace SongRequestManager
         public bool ClearAllMods = false;
 
         public int RequestHistoryLimit = 40;
-        public bool QueueRoundRobin = false;
+        public bool QueueRoundRobin = true;
         public int UserRequestLimit = 2;
         public int SubRequestLimit = 5;
         public int ModRequestLimit = 10;
@@ -30,6 +30,7 @@ namespace SongRequestManager
         public float LowestAllowedRating = 0; // Lowest allowed song rating to be played 0-100 *IMPLEMENTED*, needs UI
         public float MaximumSongLength = 180; // Maximum song length in minutes
         public float MinimumNJS = 0;
+        public bool Automap = true;
 
         public int MaxiumScanRange = 5; // How far down the list to scan for new songs
 
