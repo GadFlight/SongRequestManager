@@ -679,7 +679,7 @@ namespace SongRequestManager
 
             if (totalSongs == 0)
             {
-                //QueueChatMessage($"No new songs found.");
+                QueueChatMessage($"No new songs found.");
             }
             else
             {
